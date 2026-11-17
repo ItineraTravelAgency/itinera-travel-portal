@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de comisiones · Itinera</title>
+<style>
+:root{--bg:#f6f2fb;--card:#fff;--tx:#2a2037;--mut:#7a6f8a;--pri:#6b4c9a;--gold:#b8923a;--line:#e3dbef;--ok:#1f7a4d;--red:#c0392b;--in:#faf7fd}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1424;--card:#241c33;--tx:#efe9f8;--mut:#a99bc0;--pri:#b79be0;--gold:#e0b95c;--line:#3a2f4e;--ok:#5fd09a;--red:#ff7b6b;--in:#1d1629}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;padding:16px}
+h1{font-size:20px;margin:0 0 2px;color:var(--pri)}
+h2{font-size:15px;margin:0 0 8px;color:var(--pri)}
+.sub{color:var(--mut);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+summary{cursor:pointer;color:var(--pri)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
+input{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--in);color:var(--tx);font:inherit}
+input:focus{outline:2px solid var(--pri);border-color:transparent}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:1000px}
+th{font-size:12px;text-align:left;color:var(--mut);padding:4px 5px;border-bottom:2px solid var(--gold);line-height:1.15;vertical-align:bottom}
+td{padding:2px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
+td input{padding:3px 6px;font-size:13px;width:74px}
+td input[type=date]{width:118px}
+td.t input{width:125px}
+td.p input{width:105px}
+td.pc input{width:54px}
+.o{font-weight:600;text-align:right}
+.com{color:var(--ok);font-weight:700}
+.red{color:var(--red);font-weight:600}
+.best{background:rgba(184,146,58,.15)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+button{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
+button.g{background:transparent;color:var(--pri);border:1px solid var(--pri)}
+button.d{background:transparent;color:var(--red);border:1px solid var(--red)}
+button.x{background:transparent;color:var(--red);padding:4px 8px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.k{background:var(--in);border:1px solid var(--line);border-radius:10px;padding:10px}
+.k b{display:block;font-size:18px;color:var(--gold)}
+.k span,.m{font-size:12px;color:var(--mut)}
+.q{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.q b{display:block}
+.q div:last-child{display:flex;gap:6px;flex-shrink:0}
+</style>
+</head>
+<body>
+<h1>Calculadora de comisiones</h1>
+<p class="sub">Captura costos reales y ve tu ganancia por hotel antes de pasar los números al cotizador.</p>
+
+<div class="card">
+<div class="grid">
+<div style="grid-column:span 2"><label>Nombre de la cotización (cliente / destino)</label><input id="nombre" placeholder="Ej. Cancún julio 2027 - Familia López"></div>
+<div><label>Fecha de viaje</label><input type="date" id="fecha"></div>
+<div><label>Noches</label><input type="number" id="noches" placeholder="0"></div>
+<div><label>Personas</label><input type="number" id="pers" placeholder="0"></div>
+<div><label>Vuelos (total)</label><input type="number" id="vuelos" placeholder="0"></div>
+<div><label>Comisión meta ($)</label><input type="number" id="meta" placeholder="0"></div>
+</div>
+<div class="btns">
+<button onclick="guardar(false)">Guardar cotización</button>
+<button class="g" id="bnew" onclick="guardar(true)" style="display:none">Guardar como nueva</button>
+<button class="d" id="bclr" onclick="limpiar()">Limpiar todo</button>
+<span id="msg" class="m"></span>
+</div>
+<div class="m" id="where" style="margin-top:6px"></div>
+</div>
+
+<div class="card sum" id="sum"></div>
+
+<div class="card">
+<div class="wrap"><table>
+<thead><tr><th>Hotel</th><th>Proveedor</th><th>Costo<br>real</th><th>%<br>comisión</th><th>Extra</th><th>Total<br>hospedaje</th><th>Vuelos</th><th>Apto-<br>H-Apto</th><th>Total +<br>traslados</th><th>Por<br>persona</th><th>Comisión<br>base</th><th>Comisión<br>total</th><th>Falta para<br>meta</th><th>Límite<br>pago</th><th>Límite<br>real</th><th></th></tr></thead>
+<tbody id="tb"></tbody></table></div>
+<datalist id="provs"><option value="AVAGENCIAS"></datalist>
+<div class="btns"><button onclick="add()">+ Agregar hotel</button><button class="g" onclick="copiar()">Copiar resumen para cotizador</button><span id="msg2" class="m"></span></div>
+</div>
+
+<div class="card">
+<h2>Cotizaciones guardadas</h2>
+<div class="btns" style="margin:0 0 8px"><button class="g" onclick="exportJson()">Descargar respaldo (.json)</button><button class="g" onclick="$('#imp').click()">Importar respaldo</button><input type="file" id="imp" accept=".json" style="display:none"><span id="msg3" class="m"></span></div>
+<input id="buscar" placeholder="Buscar por nombre..." style="margin-bottom:6px">
+<div id="lista" class="m">Cargando...</div>
+</div>
+
+<details class="card" id="conf">
+<summary><b>Conexión con Google Sheets</b></summary>
+<div class="grid" style="margin-top:10px">
+<div style="grid-column:span 2"><label>URL de la aplicación web (termina en /exec)</label><input id="cUrl" placeholder="https://script.google.com/macros/s/.../exec"></div>
+<div><label>Clave</label><input id="cTok" type="password"></div>
+</div>
+<div class="btns"><button onclick="guardaCfg()">Guardar y probar</button><button class="g" onclick="quitaCfg()">Desconectar</button><span id="msg4" class="m"></span></div>
+<p class="m">La URL y la clave se guardan solo en este navegador. Hay que capturarlas una vez en cada dispositivo.</p>
+</details>
+
+<script>
+const $=s=>document.querySelector(s);
+const money=n=>(isFinite(n)?n:0).toLocaleString('es-MX',{style:'currency',currency:'MXN',minimumFractionDigits:0,maximumFractionDigits:2});
+const num=v=>parseFloat(v)||0;
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const LS=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
+const G=['fecha','noches','pers','vuelos','meta'];
+const blank=()=>({h:'',p:'',c:'',pct:'',e:'',t:'',l:'',r:''});
+const key=p=>String(p||'').trim().toUpperCase();
+let rows=[blank()],cur=null,allQ=[];
+
+function getState(){const g={};G.forEach(k=>g[k]=$('#'+k).value);return{g,rows}}
+function setState(s){rows=(s.rows&&s.rows.length?s.rows:[blank()]).map(r=>({...blank(),...r}));G.forEach(k=>$('#'+k).value=(s.g&&s.g[k])??'');draw()}
+{const s=LS('itinera_calc2');if(s){setState(s);cur=s.cur||null;$('#nombre').value=s.nombre||''}}
+
+/* ---- Google Sheets (Apps Script) ---- */
+const cfg=()=>{const c=LS('itinera_sheet');return c&&c.url&&c.token?c:null};
+async function api(b){const c=cfg();if(!c)throw new Error('sin conexion');
+const r=await fetch(c.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...b,token:c.token})});
+const j=await r.json();if(!j.ok)throw new Error(j.error||'error');return j}
+function detalle(q){let s={};try{s=JSON.parse(q.state)}catch(e){}
+const g=s.g||{},p=num(g.pers),v=num(g.vuelos);
+return (s.rows||[]).map(r=>{const ex=num(r.e),base=num(r.c)*num(r.pct)/100,hosp=num(r.c)+ex,tot=hosp+v+num(r.t);
+return [q.nombre,new Date(q.ts).toLocaleDateString('es-MX'),g.fecha||'',num(g.noches),p,v,r.h,r.p,num(r.c),num(r.pct),ex,hosp,num(r.t),tot,p>0?Math.round(tot/p*100)/100:'',base,base+ex,r.l||'',r.r||'']})}
+const pushQ=q=>api({action:'save',id:q.id,nombre:q.nombre,ts:q.ts,state:q.state,detalle:detalle(q)});
+function setWhere(ok){$('#where').textContent=ok?'Conectado a Google Sheets ✓ (tus cotizaciones se respaldan ahí).':(cfg()?'No se pudo conectar con Sheets: se guarda solo en este navegador.':'Sin Google Sheets: se guarda solo en este navegador. Conéctalo abajo.')}
+async function listQ(){
+const loc=LS('itinera_quotes')||[];
+if(cfg()){try{
+for(const q of loc.filter(x=>x.pend))await pushQ(q);
+const j=await api({action:'list'});
+const it=j.items.map(x=>({...x,ts:Number(x.ts)}));
+LS('itinera_quotes',it);setWhere(true);return it}catch(e){setWhere(false)}}else setWhere(false);
+return loc}
+async function saveQ(q){
+const l=(LS('itinera_quotes')||[]).filter(x=>x.id!==q.id);let ok=false;
+if(cfg()){try{await pushQ(q);ok=true}catch(e){}}
+l.push(ok?q:{...q,pend:true});LS('itinera_quotes',l);return ok}
+async function delQ(id){
+LS('itinera_quotes',(LS('itinera_quotes')||[]).filter(x=>x.id!==id));
+if(cfg()){try{await api({action:'del',id})}catch(e){$('#msg3').textContent='No se pudo borrar en Sheets; bórrala ahí a mano.'}}}
+async function guardaCfg(){
+LS('itinera_sheet',{url:$('#cUrl').value.trim(),token:$('#cTok').value.trim()});
+$('#msg4').textContent='Probando...';
+try{await api({action:'list'});$('#msg4').textContent='Conectado ✓';await cargarLista()}
+catch(e){$('#msg4').textContent='No se pudo conectar. Revisa la URL, la clave y que el acceso sea "Cualquier usuario".'}}
+function quitaCfg(){LS('itinera_sheet',{});$('#cUrl').value='';$('#cTok').value='';$('#msg4').textContent='Desconectado';cargarLista()}
+{const c=cfg();if(c){$('#cUrl').value=c.url;$('#cTok').value=c.token}else $('#conf').open=true}
+
+/* ---- tabla ---- */
+function draw(){
+$('#tb').innerHTML=rows.map((r,i)=>`<tr data-i="${i}">
+<td class="t"><input data-k="h" value="${esc(r.h)}"></td>
+<td class="p"><input data-k="p" list="provs" value="${esc(r.p)}"></td>
+<td><input data-k="c" type="number" value="${esc(r.c)}"></td>
+<td class="pc"><input data-k="pct" type="number" step="0.1" value="${esc(r.pct)}"></td>
+<td><input data-k="e" type="number" value="${esc(r.e)}" placeholder="0"></td>
+<td class="o red" data-o="hosp"></td><td class="o" data-o="vue"></td>
+<td><input data-k="t" type="number" value="${esc(r.t)}"></td>
+<td class="o" data-o="tot"></td><td class="o" data-o="pp"></td>
+<td class="o" data-o="base"></td><td class="o com" data-o="com"></td><td class="o" data-o="meta"></td>
+<td><input data-k="l" type="date" value="${esc(r.l)}"></td><td><input data-k="r" type="date" value="${esc(r.r)}"></td>
+<td><button class="x" onclick="del(${i})">✕</button></td></tr>`).join('');
+calc()}
+function calc(){
+const pers=num($('#pers').value),vue=num($('#vuelos').value),meta=num($('#meta').value);
+let best=-1,bi=-1,out=[];
+rows.forEach((r,i)=>{
+const ex=num(r.e),base=num(r.c)*num(r.pct)/100,hosp=num(r.c)+ex,tot=hosp+vue+num(r.t),com=base+ex;
+out.push({hosp,tot,com,base,ex});if(com>best){best=com;bi=i}
+const tr=$('#tb').children[i];if(!tr)return;
+const set=(k,v)=>tr.querySelector(`[data-o=${k}]`).textContent=v;
+set('hosp',money(hosp));set('vue',money(vue));set('tot',money(tot));set('pp',pers>0?money(tot/pers):'—');
+set('base',money(base));set('com',money(com));set('meta',meta>0?(com>=meta?'✓ cumple':money(meta-com)):'—');
+tr.className=i===bi?'best':''});
+const o=out[bi];
+$('#sum').innerHTML=o?`<div class="k"><span>Mejor comisión</span><b>${money(o.com)}</b><span>${esc(rows[bi].h)||'Hotel'}</span></div>
+<div class="k"><span>Total cliente (esa opción)</span><b>${money(o.tot)}</b></div>
+<div class="k"><span>Por persona</span><b>${pers>0?money(o.tot/pers):'—'}</b></div>`:'';
+window._out=out;
+LS('itinera_calc2',{...getState(),cur,nombre:$('#nombre').value})}
+
+$('#tb').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;rows[e.target.closest('tr').dataset.i][k]=e.target.value;calc()});
+$('#tb').addEventListener('change',e=>{const k=e.target.dataset.k;if(!k)return;const tr=e.target.closest('tr'),r=rows[tr.dataset.i];
+if(k==='p'&&key(r.p)==='AVAGENCIAS'){r.pct=12;tr.querySelector('[data-k=pct]').value=12}
+calc()});
+[...G,'nombre'].forEach(k=>$('#'+k).addEventListener('input',calc));
+function add(){rows.push(blank());draw()}
+function del(i){rows.splice(i,1);if(!rows.length)rows=[blank()];draw()}
+
+let ct;
+function limpiar(){const b=$('#bclr');
+if(b.dataset.s){clearTimeout(ct);delete b.dataset.s;b.textContent='Limpiar todo';rows=[blank()];G.forEach(k=>$('#'+k).value='');$('#nombre').value='';cur=null;$('#bnew').style.display='none';$('#msg').textContent='';draw();return}
+b.dataset.s=1;b.textContent='¿Seguro? Clic otra vez';ct=setTimeout(()=>{delete b.dataset.s;b.textContent='Limpiar todo'},3000)}
+
+/* ---- guardar / lista ---- */
+async function guardar(nueva){
+const nombre=$('#nombre').value.trim();
+if(!nombre){$('#msg').textContent='Escribe un nombre para la cotización.';return}
+if(nueva)cur=null;
+const q={id:cur||'q_'+Date.now(),nombre,ts:Date.now(),state:JSON.stringify(getState())};
+$('#msg').textContent='Guardando...';
+const ok=await saveQ(q);cur=q.id;$('#bnew').style.display='';calc();
+$('#msg').textContent=ok?'Guardada en Google Sheets ✓':(cfg()?'Guardada solo en este navegador; se enviará a Sheets después.':'Guardada en este navegador. Conecta Google Sheets para respaldarla.');
+await cargarLista()}
+async function cargarLista(){allQ=await listQ();renderLista()}
+function renderLista(){
+const f=$('#buscar').value.toLowerCase();
+const it=allQ.filter(x=>(x.nombre||'').toLowerCase().includes(f)).sort((a,b)=>b.ts-a.ts);
+$('#lista').innerHTML=it.length?it.map(x=>{let s={};try{s=JSON.parse(x.state)}catch(e){}
+const n=(s.rows||[]).length,fv=s.g&&s.g.fecha?' · viaje '+s.g.fecha:'';
+return `<div class="q"><div><b>${esc(x.nombre)}</b><span class="m">${new Date(x.ts).toLocaleDateString('es-MX')} · ${n} hotel(es)${fv}${x.pend?' · sin enviar a Sheets':''}</span></div>
+<div><button class="g" data-a="open" data-id="${esc(x.id)}">Abrir</button><button class="d" data-a="del" data-id="${esc(x.id)}">Borrar</button></div></div>`}).join(''):'No hay cotizaciones guardadas todavía.'}
+$('#buscar').addEventListener('input',renderLista);
+$('#lista').addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const q=allQ.find(x=>x.id===b.dataset.id);
+if(b.dataset.a==='open'&&q){setState(JSON.parse(q.state));cur=q.id;$('#nombre').value=q.nombre;$('#bnew').style.display='';$('#msg').textContent='Abierta: '+q.nombre;calc();scrollTo(0,0)}
+if(b.dataset.a==='del'){if(b.dataset.s){await delQ(b.dataset.id);if(cur===b.dataset.id){cur=null;$('#bnew').style.display='none'}cargarLista()}else{b.dataset.s=1;b.textContent='¿Seguro?';setTimeout(()=>{b.dataset.s='';b.textContent='Borrar'},3000)}}});
+
+function copiar(){
+const pers=num($('#pers').value);
+const t=`Viaje ${$('#fecha').value} · ${$('#noches').value} noches · ${pers} personas\n`+rows.map((r,i)=>`${r.h}: ${money(window._out[i].tot)} total`+(pers>0?` (${money(window._out[i].tot/pers)} p/p)`:'')).join('\n');
+try{navigator.clipboard.writeText(t).then(()=>$('#msg2').textContent='Copiado ✓')}catch(e){$('#msg2').textContent='No se pudo copiar'}}
+
+/* ---- respaldo .json ---- */
+function exportJson(){
+const a=document.createElement('a');
+a.href=URL.createObjectURL(new Blob([JSON.stringify(allQ,null,1)],{type:'application/json'}));
+a.download='itinera-cotizaciones-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+$('#imp').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;
+try{const a=JSON.parse(await f.text());let n=0;for(const q of a){if(q&&q.id&&q.nombre&&q.state){await saveQ(q);n++}}
+$('#msg3').textContent=n+' cotización(es) importadas ✓';cargarLista()}catch(x){$('#msg3').textContent='Archivo no válido'}e.target.value=''});
+
+if(cur)$('#bnew').style.display='';
+draw();cargarLista();
+</script>
+</body>
+</html>
