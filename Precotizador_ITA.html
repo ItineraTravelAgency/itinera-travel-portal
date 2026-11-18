@@ -54,7 +54,8 @@ button.x{background:transparent;color:var(--red);padding:4px 8px}
 <div style="grid-column:span 2"><label>Nombre de la cotización (cliente / destino)</label><input id="nombre" placeholder="Ej. Cancún julio 2027 - Familia López"></div>
 <div><label>Fecha de viaje</label><input type="date" id="fecha"></div>
 <div><label>Noches</label><input type="number" id="noches" placeholder="0"></div>
-<div><label>Personas</label><input type="number" id="pers" placeholder="0"></div>
+<div><label>Adultos</label><input type="number" id="adultos" placeholder="0"></div>
+<div><label>Menores</label><input type="number" id="menores" placeholder="0"></div>
 <div><label>Vuelos (total)</label><input type="number" id="vuelos" placeholder="0"></div>
 <div><label>Comisión meta ($)</label><input type="number" id="meta" placeholder="0"></div>
 </div>
@@ -100,13 +101,13 @@ const money=n=>(isFinite(n)?n:0).toLocaleString('es-MX',{style:'currency',curren
 const num=v=>parseFloat(v)||0;
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const LS=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
-const G=['fecha','noches','pers','vuelos','meta'];
+const G=['fecha','noches','adultos','menores','vuelos','meta'];
 const blank=()=>({h:'',p:'',c:'',pct:'',e:'',t:'',l:'',r:''});
 const key=p=>String(p||'').trim().toUpperCase();
 let rows=[blank()],cur=null,allQ=[];
 
 function getState(){const g={};G.forEach(k=>g[k]=$('#'+k).value);return{g,rows}}
-function setState(s){rows=(s.rows&&s.rows.length?s.rows:[blank()]).map(r=>({...blank(),...r}));G.forEach(k=>$('#'+k).value=(s.g&&s.g[k])??'');draw()}
+function setState(s){s.g=s.g||{};if(s.g.adultos===undefined&&s.g.pers!==undefined)s.g.adultos=s.g.pers;rows=(s.rows&&s.rows.length?s.rows:[blank()]).map(r=>({...blank(),...r}));G.forEach(k=>$('#'+k).value=(s.g&&s.g[k])??'');draw()}
 {const s=LS('itinera_calc2');if(s){setState(s);cur=s.cur||null;$('#nombre').value=s.nombre||''}}
 
 /* ---- Google Sheets (Apps Script) ---- */
@@ -115,9 +116,9 @@ async function api(b){const c=cfg();if(!c)throw new Error('sin conexion');
 const r=await fetch(c.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...b,token:c.token})});
 const j=await r.json();if(!j.ok)throw new Error(j.error||'error');return j}
 function detalle(q){let s={};try{s=JSON.parse(q.state)}catch(e){}
-const g=s.g||{},p=num(g.pers),v=num(g.vuelos);
+const g=s.g||{},ad=g.adultos!==undefined?num(g.adultos):num(g.pers),me=num(g.menores),p=ad+me,v=num(g.vuelos);
 return (s.rows||[]).map(r=>{const ex=num(r.e),base=num(r.c)*num(r.pct)/100,hosp=num(r.c)+ex,tot=hosp+v+num(r.t);
-return [q.nombre,new Date(q.ts).toLocaleDateString('es-MX'),g.fecha||'',num(g.noches),p,v,r.h,r.p,num(r.c),num(r.pct),ex,hosp,num(r.t),tot,p>0?Math.round(tot/p*100)/100:'',base,base+ex,r.l||'',r.r||'']})}
+return [q.nombre,new Date(q.ts).toLocaleDateString('es-MX'),g.fecha||'',num(g.noches),p,v,r.h,r.p,num(r.c),num(r.pct),ex,hosp,num(r.t),tot,p>0?Math.round(tot/p*100)/100:'',base,base+ex,r.l||'',r.r||'',ad,me]})}
 const pushQ=q=>api({action:'save',id:q.id,nombre:q.nombre,ts:q.ts,state:q.state,detalle:detalle(q)});
 function setWhere(ok){$('#where').textContent=ok?'Conectado a Google Sheets ✓ (tus cotizaciones se respaldan ahí).':(cfg()?'No se pudo conectar con Sheets: se guarda solo en este navegador.':'Sin Google Sheets: se guarda solo en este navegador. Conéctalo abajo.')}
 async function listQ(){
@@ -159,7 +160,7 @@ $('#tb').innerHTML=rows.map((r,i)=>`<tr data-i="${i}">
 <td><button class="x" onclick="del(${i})">✕</button></td></tr>`).join('');
 calc()}
 function calc(){
-const pers=num($('#pers').value),vue=num($('#vuelos').value),meta=num($('#meta').value);
+const pers=num($('#adultos').value)+num($('#menores').value),vue=num($('#vuelos').value),meta=num($('#meta').value);
 let best=-1,bi=-1,out=[];
 rows.forEach((r,i)=>{
 const ex=num(r.e),base=num(r.c)*num(r.pct)/100,hosp=num(r.c)+ex,tot=hosp+vue+num(r.t),com=base+ex;
@@ -213,8 +214,8 @@ if(b.dataset.a==='open'&&q){setState(JSON.parse(q.state));cur=q.id;$('#nombre').
 if(b.dataset.a==='del'){if(b.dataset.s){await delQ(b.dataset.id);if(cur===b.dataset.id){cur=null;$('#bnew').style.display='none'}cargarLista()}else{b.dataset.s=1;b.textContent='¿Seguro?';setTimeout(()=>{b.dataset.s='';b.textContent='Borrar'},3000)}}});
 
 function copiar(){
-const pers=num($('#pers').value);
-const t=`Viaje ${$('#fecha').value} · ${$('#noches').value} noches · ${pers} personas\n`+rows.map((r,i)=>`${r.h}: ${money(window._out[i].tot)} total`+(pers>0?` (${money(window._out[i].tot/pers)} p/p)`:'')).join('\n');
+const ad=num($('#adultos').value),me=num($('#menores').value),pers=ad+me;
+const t=`Viaje ${$('#fecha').value} · ${$('#noches').value} noches · ${ad} adulto(s)${me?' y '+me+' menor(es)':''}\n`+rows.map((r,i)=>`${r.h}: ${money(window._out[i].tot)} total`+(pers>0?` (${money(window._out[i].tot/pers)} p/p)`:'')).join('\n');
 try{navigator.clipboard.writeText(t).then(()=>$('#msg2').textContent='Copiado ✓')}catch(e){$('#msg2').textContent='No se pudo copiar'}}
 
 /* ---- respaldo .json ---- */
