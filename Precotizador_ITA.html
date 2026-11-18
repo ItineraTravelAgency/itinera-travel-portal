@@ -75,7 +75,7 @@ button.x{background:transparent;color:var(--red);padding:4px 8px}
 <thead><tr><th>Hotel</th><th>Proveedor</th><th>Costo<br>real</th><th>%<br>comisión</th><th>Extra</th><th>Total<br>hospedaje</th><th>Vuelos</th><th>Apto-<br>H-Apto</th><th>Total +<br>traslados</th><th>Por<br>persona</th><th>Comisión<br>base</th><th>Comisión<br>total</th><th>Falta para<br>meta</th><th>Límite<br>pago</th><th>Límite<br>real</th><th></th></tr></thead>
 <tbody id="tb"></tbody></table></div>
 <datalist id="provs"><option value="AVAGENCIAS"></datalist>
-<div class="btns"><button onclick="add()">+ Agregar hotel</button><button class="g" onclick="copiar()">Copiar resumen para cotizador</button><span id="msg2" class="m"></span></div>
+<div class="btns"><button onclick="add()">+ Agregar hotel</button><button class="g" onclick="ordenar()">Ordenar de menor a mayor</button><button class="g" onclick="copiar()">Copiar resumen para cotizador</button><span id="msg2" class="m"></span></div>
 </div>
 
 <div class="card">
@@ -183,6 +183,7 @@ if(k==='p'&&key(r.p)==='AVAGENCIAS'){r.pct=12;tr.querySelector('[data-k=pct]').v
 calc()});
 [...G,'nombre'].forEach(k=>$('#'+k).addEventListener('input',calc));
 function add(){rows.push(blank());draw()}
+function ordenar(){const t=r=>r.c===''?Infinity:num(r.c)+num(r.e);rows.sort((x,y)=>t(x)-t(y));draw()}
 function del(i){rows.splice(i,1);if(!rows.length)rows=[blank()];draw()}
 
 let ct;
