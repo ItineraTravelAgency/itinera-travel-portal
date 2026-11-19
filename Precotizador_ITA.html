@@ -89,7 +89,7 @@ button.x{background:transparent;color:var(--red);padding:4px 8px}
 <thead><tr><th>Hotel</th><th>Proveedor</th><th>Costo<br>real</th><th>%<br>comisión</th><th>Extra</th><th>Total<br>hospedaje</th><th>Vuelos</th><th>Apto-<br>H-Apto</th><th>Total +<br>traslados</th><th>Por<br>persona</th><th>Comisión<br>base</th><th>Comisión<br>total</th><th>Falta para<br>meta</th><th>Límite<br>pago</th><th>Límite<br>real</th><th></th></tr></thead>
 <tbody id="tb"></tbody></table></div>
 <datalist id="provs"><option value="AVAGENCIAS"></datalist>
-<div class="btns"><button onclick="add()">+ Agregar hotel</button><button class="g" onclick="ordenar()">Ordenar de menor a mayor</button><button class="g" onclick="copiar()">Copiar resumen para cotizador</button><span id="msg2" class="m"></span></div>
+<div class="btns"><button onclick="add()">+ Agregar hotel</button><button class="g" onclick="ordenar()">Ordenar de menor a mayor</button><button class="g" onclick="copiar()">Copiar resumen para cotizador</button><button onclick="enviarCot()">Enviar al cotizador</button><span id="msg2" class="m"></span></div>
 </div>
 
 <div class="card">
@@ -267,6 +267,14 @@ rows=[blank()];G.forEach(k=>$('#'+k).value='');$('#nombre').value='';cur=null;$(
 Object.keys(d).forEach(k=>$('#'+k).value=d[k]);
 draw();$('#solTxt').value='';$('#solc').open=false;
 $('#msgS').textContent='';$('#msg').textContent='Solicitud importada ('+n+' campos). Faltan vuelos, hoteles y comisión meta.';scrollTo(0,0)}
+
+/* ---- enviar al cotizador (sin costos reales ni comisiones) ---- */
+function enviarCot(){
+const g=getState().g,h=rows.filter(r=>r.h||num(r.c)).map(r=>({n:r.h,p:num(r.c)+num(r.e)}));
+if(!h.length){$('#msg2').textContent='Captura al menos un hotel.';return}
+const d={t:'itinera-calc',v:1,cliente:$('#nombre').value.trim(),fecha:g.fecha,noches:num(g.noches),adultos:num(g.adultos),menores:num(g.menores),hospedaje:g.hospedaje,vuelos:num(g.vuelos),traslados:Math.max(0,...rows.map(r=>num(r.t))),hoteles:h};
+const txt='ITINERA-CALC:'+JSON.stringify(d);
+try{navigator.clipboard.writeText(txt).then(()=>$('#msg2').textContent='Copiado ✓ Pégalo en el cotizador (Importar de calculadora)',()=>$('#msg2').textContent='No se pudo copiar')}catch(e){$('#msg2').textContent='No se pudo copiar'}}
 
 /* ---- respaldo .json ---- */
 function exportJson(){

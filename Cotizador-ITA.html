@@ -157,7 +157,7 @@ tr.opcional [data-price]{opacity:.55}
 </head>
 <body>
 
-<div class="toolbar no-print"><button class="primary" onclick="imprimir()">🖨️ Imprimir / Guardar PDF</button><div class="sep"></div><button onclick="descargarHTML()">💾 Guardar HTML</button><button onclick="limpiar()">🧹 Nueva cotización</button><div class="sep"></div><button onclick="marcaAgua()">💧 Marca de agua</button><input id="wmFile" type="file" accept="image/*" onchange="cargarWMArchivo(event)"><span class="hint" id="estado">Edición de la propuesta.</span></div>
+<div class="toolbar no-print"><button class="primary" onclick="imprimir()">🖨️ Imprimir / Guardar PDF</button><div class="sep"></div><button onclick="descargarHTML()">💾 Guardar HTML</button><button onclick="limpiar()">🧹 Nueva cotización</button><button onclick="importarCalc()">📥 Importar de calculadora</button><div class="sep"></div><button onclick="marcaAgua()">💧 Marca de agua</button><input id="wmFile" type="file" accept="image/*" onchange="cargarWMArchivo(event)"><span class="hint" id="estado">Edición de la propuesta.</span></div>
 
 <div id="wmLayer" style="background-image: none;"></div>
 <main id="doc">
@@ -644,6 +644,32 @@ function exportarCliente(personalizada){
  const lock=`<script>(function(){const blocked=['exportarJSON','importarJSON','cargarLogo','cambiarColor','restablecerMarca','exportarCliente'];${personalizada?'':'blocked.push("marcaAgua","aplicarWM","cargarWMArchivo","guardarWM","wmUsarLogo","wmQuitar","wmAjustar")'};function nope(){try{estado('Esta parte de la plantilla está bloqueada.')}catch(e){}}blocked.forEach(n=>{if(typeof window[n]==='function')window[n]=nope});window.__borrar=function(){localStorage.removeItem('cliente-cotizador-'+document.title)};window.guardar=function(){localStorage.setItem('cliente-cotizador-'+document.title,document.getElementById('doc').innerHTML);estado('Borrador guardado.')};window.restaurar=function(){const d=localStorage.getItem('cliente-cotizador-'+document.title);if(!d){estado('No hay borrador guardado.');return}document.getElementById('doc').innerHTML=d;postRestore();estado('Borrador restaurado.')};})();<\/script>`;
  if(script){script.textContent=script.textContent.replace('const LOCKED=false','const LOCKED=true');script.insertAdjacentHTML('afterend',lock)}
  const blob=new Blob(['<!DOCTYPE html>\n'+clon.outerHTML],{type:'text/html;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=PREFIJO_ARCHIVO+(limpiarNombre(quien)||'cliente')+(personalizada?'_personalizada':'_basica')+'.html';a.click();URL.revokeObjectURL(a.href);estado('Versión cliente descargada.')}
+
+/* ---- importar de la calculadora de comisiones ---- */
+function importarCalc(){
+ const old=document.getElementById('calcPanel');if(old){old.remove();return}
+ const p=document.createElement('div');p.id='calcPanel';p.className='no-print';
+ p.style.cssText='position:fixed;right:14px;bottom:14px;z-index:50;width:300px;background:#fff;border:1px solid #ddd;border-radius:10px;box-shadow:0 8px 30px #0003;padding:12px;display:grid;gap:8px;font-size:12px';
+ p.innerHTML='<b>📥 Importar de la calculadora</b><textarea id="calcTxt" rows="5" placeholder="Pega aquí lo que copiaste con «Enviar al cotizador»" style="width:100%;font:inherit"></textarea><div class="wmBtns"><button onclick="aplicarCalc()">Importar</button><button onclick="importarCalc()">Cerrar</button></div>';
+ document.body.appendChild(p);document.getElementById('calcTxt').focus();
+}
+function aplicarCalc(){
+ let d;
+ try{d=JSON.parse(document.getElementById('calcTxt').value.replace(/^\s*ITINERA-CALC:/,''));if(d.t!=='itinera-calc')throw 0}catch(e){estado('El texto no es válido. Cópialo de nuevo desde la calculadora.');return}
+ if((sumPrices('#hotels [data-price]')>0||sumPrices('#flights [data-price]')>0)&&!confirm('Esto reemplaza los vuelos, hoteles y traslados actuales. ¿Continuar?'))return;
+ const fmt=(iso,add)=>{if(!iso)return '';const a=iso.split('-').map(Number),t=new Date(a[0],a[1]-1,a[2]+(add||0));return String(t.getDate()).padStart(2,'0')+'/'+String(t.getMonth()+1).padStart(2,'0')+'/'+t.getFullYear()};
+ const campo=l=>{for(const x of document.querySelectorAll('#doc .grid label'))if(x.textContent.trim().toLowerCase()===l)return x.parentElement.querySelector('.f')};
+ const fi=fmt(d.fecha),fo=d.fecha&&d.noches?fmt(d.fecha,d.noches):'';
+ const put=(l,v)=>{const e=campo(l);if(e&&v!==''&&v!==undefined)e.textContent=v};
+ put('cliente',d.cliente||'');put('fecha de salida',fi);put('fecha de regreso',fo);put('adultos',d.adultos?String(d.adultos):'');put('niños',String(d.menores||0));
+ ['#flights','#hotels','#transfersTable tbody'].forEach(q=>document.querySelector(q).innerHTML='');
+ addFlight(d.vuelos>0?{price:String(d.vuelos)}:{});
+ (d.hoteles||[]).forEach(h=>addHotel({name:h.n,hotel:h.n,stay:'1',nights:d.noches?String(d.noches):'',meal:d.hospedaje||'',checkin:fi,checkout:fo,price:String(h.p)}));
+ if(!(d.hoteles||[]).length)addHotel();
+ addTransfer(d.traslados>0?{date:fi,service:'Aeropuerto → hotel → aeropuerto',pax:String((d.adultos||0)+(d.menores||0)),price:String(d.traslados)}:{});
+ document.getElementById('calcPanel')?.remove();activarCampos();recalcular();
+ estado('Importado: '+(d.hoteles||[]).length+' hotel(es). Revisa y completa lo demás.');
+}
 (function init(){
  const theme=LOCKED?null:localStorage.getItem('tema-cotizador-itinera');if(theme)try{setTheme(JSON.parse(theme))}catch(e){}
  const logo=LOCKED?null:localStorage.getItem('logo-itinera');if(logo)document.getElementById('logoBox').innerHTML='<img src="'+logo+'" alt="Logo">';
