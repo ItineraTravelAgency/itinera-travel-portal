@@ -16,8 +16,9 @@ h2{font-size:15px;margin:0 0 8px;color:var(--pri)}
 summary{cursor:pointer;color:var(--pri)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 label{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
-input{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--in);color:var(--tx);font:inherit}
-input:focus{outline:2px solid var(--pri);border-color:transparent}
+input,textarea{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--in);color:var(--tx);font:inherit}
+textarea{resize:vertical;min-height:60px}
+input:focus,textarea:focus{outline:2px solid var(--pri);border-color:transparent}
 .wrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;min-width:1000px}
 th{font-size:12px;text-align:left;color:var(--mut);padding:4px 5px;border-bottom:2px solid var(--gold);line-height:1.15;vertical-align:bottom}
@@ -31,6 +32,7 @@ td.pc input{width:54px}
 .com{color:var(--ok);font-weight:700}
 .red{color:var(--red);font-weight:600}
 .best{background:rgba(184,146,58,.15)}
+tr.over td[data-o=hosp]{background:rgba(192,57,43,.2)}
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
 button{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
 button.g{background:transparent;color:var(--pri);border:1px solid var(--pri)}
@@ -49,6 +51,12 @@ button.x{background:transparent;color:var(--red);padding:4px 8px}
 <h1>Calculadora de comisiones</h1>
 <p class="sub">Captura costos reales y ve tu ganancia por hotel antes de pasar los números al cotizador.</p>
 
+<details class="card" id="solc">
+<summary><b>Importar solicitud del cliente</b></summary>
+<textarea id="solTxt" rows="6" style="margin-top:10px" placeholder="Pega aquí la solicitud de cotización completa..."></textarea>
+<div class="btns"><button onclick="importar()">Importar solicitud</button><span id="msgS" class="m"></span></div>
+</details>
+
 <div class="card">
 <div class="grid">
 <div style="grid-column:span 2"><label>Nombre de la cotización (cliente / destino)</label><input id="nombre" placeholder="Ej. Cancún julio 2027 - Familia López"></div>
@@ -58,6 +66,12 @@ button.x{background:transparent;color:var(--red);padding:4px 8px}
 <div><label>Menores</label><input type="number" id="menores" placeholder="0"></div>
 <div><label>Vuelos (total)</label><input type="number" id="vuelos" placeholder="0"></div>
 <div><label>Comisión meta ($)</label><input type="number" id="meta" placeholder="0"></div>
+<div><label>WhatsApp</label><input id="wa" placeholder="8110000000"></div>
+<div style="grid-column:span 2"><label>Correo</label><input id="correo" type="email"></div>
+<div><label>Hospedaje</label><input id="hospedaje" placeholder="Todo incluido"></div>
+<div><label>Presupuesto<br>mín. (sin vuelos)</label><input type="number" id="pmin" placeholder="0"></div>
+<div><label>Presupuesto<br>máx. (sin vuelos)</label><input type="number" id="pmax" placeholder="0"></div>
+<div style="grid-column:1/-1"><label>Notas (tipo de viaje, prioridades, actividades, visa, cómo nos conoció...)</label><textarea id="notas" rows="3"></textarea></div>
 </div>
 <div class="btns">
 <button onclick="guardar(false)">Guardar cotización</button>
@@ -101,7 +115,7 @@ const money=n=>(isFinite(n)?n:0).toLocaleString('es-MX',{style:'currency',curren
 const num=v=>parseFloat(v)||0;
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const LS=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
-const G=['fecha','noches','adultos','menores','vuelos','meta'];
+const G=['fecha','noches','adultos','menores','vuelos','meta','wa','correo','hospedaje','pmin','pmax','notas'];
 const blank=()=>({h:'',p:'',c:'',pct:'',e:'',t:'',l:'',r:''});
 const key=p=>String(p||'').trim().toUpperCase();
 let rows=[blank()],cur=null,allQ=[];
@@ -161,19 +175,21 @@ $('#tb').innerHTML=rows.map((r,i)=>`<tr data-i="${i}">
 calc()}
 function calc(){
 const pers=num($('#adultos').value)+num($('#menores').value),vue=num($('#vuelos').value),meta=num($('#meta').value);
+const pmin=num($('#pmin').value),pmax=num($('#pmax').value);
 let best=-1,bi=-1,out=[];
 rows.forEach((r,i)=>{
 const ex=num(r.e),base=num(r.c)*num(r.pct)/100,hosp=num(r.c)+ex,tot=hosp+vue+num(r.t),com=base+ex;
-out.push({hosp,tot,com,base,ex});if(com>best){best=com;bi=i}
+const sv=hosp+num(r.t),over=pmax>0&&sv>pmax;
+out.push({hosp,tot,com,base,ex,sv,over});if(com>best){best=com;bi=i}
 const tr=$('#tb').children[i];if(!tr)return;
 const set=(k,v)=>tr.querySelector(`[data-o=${k}]`).textContent=v;
 set('hosp',money(hosp));set('vue',money(vue));set('tot',money(tot));set('pp',pers>0?money(tot/pers):'—');
 set('base',money(base));set('com',money(com));set('meta',meta>0?(com>=meta?'✓ cumple':money(meta-com)):'—');
-tr.className=i===bi?'best':''});
+tr.className=(i===bi?'best':'')+(over?' over':'')});
 const o=out[bi];
 $('#sum').innerHTML=o?`<div class="k"><span>Mejor comisión</span><b>${money(o.com)}</b><span>${esc(rows[bi].h)||'Hotel'}</span></div>
 <div class="k"><span>Total cliente (esa opción)</span><b>${money(o.tot)}</b></div>
-<div class="k"><span>Por persona</span><b>${pers>0?money(o.tot/pers):'—'}</b></div>`:'';
+<div class="k"><span>Por persona</span><b>${pers>0?money(o.tot/pers):'—'}</b></div>`+((pmin||pmax)?`<div class="k"><span>Presupuesto cliente (sin vuelos)</span><b>${pmin?money(pmin):'—'} a ${pmax?money(pmax):'—'}</b><span class="${o.over?'red':''}">Esta opción: ${money(o.sv)}${o.over?' · se pasa del máximo':''}</span></div>`:''):'';
 window._out=out;
 LS('itinera_calc2',{...getState(),cur,nombre:$('#nombre').value})}
 
@@ -218,6 +234,39 @@ function copiar(){
 const ad=num($('#adultos').value),me=num($('#menores').value),pers=ad+me;
 const t=`Viaje ${$('#fecha').value} · ${$('#noches').value} noches · ${ad} adulto(s)${me?' y '+me+' menor(es)':''}\n`+rows.map((r,i)=>`${r.h}: ${money(window._out[i].tot)} total`+(pers>0?` (${money(window._out[i].tot/pers)} p/p)`:'')).join('\n');
 try{navigator.clipboard.writeText(t).then(()=>$('#msg2').textContent='Copiado ✓')}catch(e){$('#msg2').textContent='No se pudo copiar'}}
+
+
+/* ---- importar solicitud ---- */
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const MES={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
+function importar(){
+const txt=$('#solTxt').value,d={},notas=[];
+txt.split(/\r?\n/).forEach(l=>{
+l=l.replace(/\*/g,'').trim();const i=l.indexOf(':');if(i<1)return;
+const lab=l.slice(0,i).trim(),k=norm(lab),v=l.slice(i+1).trim();if(!v)return;
+if(k.startsWith('nombre'))d.nombre=v;
+else if(k.startsWith('whatsapp'))d.wa=v;
+else if(k.startsWith('correo'))d.correo=v;
+else if(k.startsWith('viajeros')){const a=v.match(/(\d+)\s*adult/i),m=v.match(/(\d+)\s*(menor|nino|niño)/i);if(a)d.adultos=a[1];if(m)d.menores=m[1]}
+else if(k.startsWith('hospedaje'))d.hospedaje=v;
+else if(k.startsWith('presupuesto')){const n=(v.split('·')[0].replace(/,/g,'').match(/\d+(\.\d+)?/g)||[]);
+if(n.length>=2){d.pmin=n[0];d.pmax=n[1]}else if(n.length===1)d.pmax=n[0];
+const ex=(v.split('·')[1]||'').trim();if(ex)notas.push('Presupuesto: '+ex)}
+else if(k.startsWith('fechas')){const n=norm(v),m=n.match(/(\d{1,2})\s+de\s+([a-z]+)(?:\s+de\s+(\d{4}))?/),nn=n.match(/(\d+)\s*noche/);
+if(m&&MES[m[2]]){const hoy=new Date();let y=m[3]?+m[3]:hoy.getFullYear();
+if(!m[3]&&new Date(y,MES[m[2]]-1,+m[1])<hoy)y++;
+d.fecha=y+'-'+String(MES[m[2]]).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0')}
+if(nn)d.noches=nn[1];if(/flexible/.test(n))notas.push('Fechas flexibles')}
+else if(k.startsWith('acepta'))return;
+else notas.push(lab+': '+v)});
+if(notas.length)d.notas=notas.join('\n');
+const n=Object.keys(d).length;
+if(!n){$('#msgS').textContent='No encontré datos. Pega la solicitud completa.';return}
+if(rows.some(r=>r.h||r.c)&&!confirm('Esto reemplaza la cotización actual. ¿Continuar?'))return;
+rows=[blank()];G.forEach(k=>$('#'+k).value='');$('#nombre').value='';cur=null;$('#bnew').style.display='none';$('#msg').textContent='';
+Object.keys(d).forEach(k=>$('#'+k).value=d[k]);
+draw();$('#solTxt').value='';$('#solc').open=false;
+$('#msgS').textContent='';$('#msg').textContent='Solicitud importada ('+n+' campos). Faltan vuelos, hoteles y comisión meta.';scrollTo(0,0)}
 
 /* ---- respaldo .json ---- */
 function exportJson(){
