@@ -105,8 +105,8 @@
   }
   /* Al editar, siempre fondo claro y letra oscura, también sobre fondos oscuros. */
   .f:focus{background:#fff6d9;color:var(--ink) !important;border-bottom:1px solid var(--accent)}
-  .f:focus:empty::before{color:#9aa3ad !important}
-  .f:empty::before{content:attr(data-ph);color:#a7b0b8}
+  .f:focus:empty::before{color:#6a7387 !important}
+  .f:empty::before{content:attr(data-ph);color:#6a7387}
   .f.num{text-align:right;font-variant-numeric:tabular-nums}
   .f.big{font-size:14px;font-weight:700}
 
@@ -155,7 +155,7 @@
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
   button.orange{background:var(--orange);border-color:var(--orange);color:#fff}
   .toolbar{gap:7px;box-shadow:0 2px 10px #0000000b}
-  .sheet{width:min(210mm,calc(100% - 20px));border-radius:16px;box-shadow:0 8px 30px #00000012}
+  .sheet{width:210mm;max-width:calc(100% - 20px);border-radius:16px;box-shadow:0 8px 30px #00000012}
   .logo-box{border-radius:12px}
   .agency h1{font-size:22px;font-weight:800}
   .doc-id .res{border-radius:12px;border-left-width:4px;padding:8px 12px}
@@ -184,6 +184,24 @@
     .sheet{padding:18px}.g3,.g4{grid-template-columns:1fr 1fr}.fin{grid-template-columns:1fr}.doc-head{flex-wrap:wrap}
     .sheet{overflow-x:auto}
   }
+/* ===== Correcciones (24 nov 2026): tablas en móvil, títulos, contraste ===== */
+.tblWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:820px){
+  .fin>*{min-width:0}
+  .doc-id{min-width:0;width:100%;text-align:left}
+  .doc-id .title{font-size:12px}
+  .agency h1{font-size:19px;white-space:nowrap}
+  .tblWrap table{min-width:600px}
+  #tblVuelos{min-width:780px}
+  #tblPax{min-width:720px}
+  #tblHotel{min-width:680px}
+  .tblWrap th{white-space:nowrap}
+}
+@media print{
+  .tblWrap{overflow:visible!important}
+  .tblWrap table{min-width:0!important;width:100%!important}
+  .tblWrap th{white-space:normal!important}
+}
   @media print{
     .sheet{border-radius:0;width:auto}
     .field .f,td .f,.totals .row .f{border:0;background:transparent;padding:1px 0;min-height:0;border-radius:0}
@@ -292,6 +310,7 @@
     <h2>3 · Pasajeros
       <span class="tools no-print"><button onclick="addRow('tblPax')">+ Pasajero</button></span>
     </h2>
+    <div class="tblWrap">
     <table id="tblPax">
       <thead>
         <tr>
@@ -331,6 +350,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
     <div class="fine" style="margin-top:4px">ADT = adulto · CHD = niño · INF = bebé. Verifique que los nombres coincidan exactamente con el documento de viaje; las correcciones posteriores pueden generar penalidades.</div>
   </section>
 
@@ -354,14 +374,15 @@
     <h2>5 · Itinerario de vuelos
       <span class="tools no-print"><button onclick="addRow('tblVuelos')">+ Vuelo</button></span>
     </h2>
+    <div class="tblWrap">
     <table id="tblVuelos">
       <thead>
         <tr>
           <th style="width:20px">#</th>
           <th style="width:88px">Aerolínea</th>
           <th style="width:52px">Vuelo</th>
-          <th>Origen (aeropuerto / IATA / terminal)</th>
-          <th>Destino (aeropuerto / IATA / terminal)</th>
+          <th>Origen</th>
+          <th>Destino</th>
           <th style="width:78px">Salida<br>fecha / hora</th>
           <th style="width:78px">Llegada<br>fecha / hora</th>
           <th style="width:46px">Clase</th>
@@ -373,10 +394,10 @@
       <tbody>
         <tr>
           <td class="rownum">1</td>
-          <td><span class="f" data-ph="Iberia" contenteditable="true"></span></td>
-          <td><span class="f" data-ph="IB1234" contenteditable="true"></span></td>
-          <td><span class="f" data-ph="Madrid–Barajas (MAD) T4" contenteditable="true"></span></td>
-          <td><span class="f" data-ph="Bogotá–El Dorado (BOG) T1" contenteditable="true"></span></td>
+          <td><span class="f" data-ph="Aeroméxico" contenteditable="true"></span></td>
+          <td><span class="f" data-ph="AM1234" contenteditable="true"></span></td>
+          <td><span class="f" data-ph="Monterrey (MTY) T1" contenteditable="true"></span></td>
+          <td><span class="f" data-ph="Cancún (CUN) T2" contenteditable="true"></span></td>
           <td><span class="f" data-ph="dd/mm 00:00" contenteditable="true"></span></td>
           <td><span class="f" data-ph="dd/mm 00:00" contenteditable="true"></span></td>
           <td><span class="f" data-ph="Y" contenteditable="true"></span></td>
@@ -386,10 +407,10 @@
         </tr>
         <tr>
           <td class="rownum">2</td>
-          <td><span class="f" data-ph="Iberia" contenteditable="true"></span></td>
-          <td><span class="f" data-ph="IB1235" contenteditable="true"></span></td>
-          <td><span class="f" data-ph="Bogotá–El Dorado (BOG) T1" contenteditable="true"></span></td>
-          <td><span class="f" data-ph="Madrid–Barajas (MAD) T4" contenteditable="true"></span></td>
+          <td><span class="f" data-ph="Aeroméxico" contenteditable="true"></span></td>
+          <td><span class="f" data-ph="AM1235" contenteditable="true"></span></td>
+          <td><span class="f" data-ph="Cancún (CUN) T2" contenteditable="true"></span></td>
+          <td><span class="f" data-ph="Monterrey (MTY) T1" contenteditable="true"></span></td>
           <td><span class="f" data-ph="dd/mm 00:00" contenteditable="true"></span></td>
           <td><span class="f" data-ph="dd/mm 00:00" contenteditable="true"></span></td>
           <td><span class="f" data-ph="Y" contenteditable="true"></span></td>
@@ -399,6 +420,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
     <div class="fine" style="margin-top:4px">Todos los horarios son <b>locales</b> de cada aeropuerto. Preséntese en el mostrador <b>3 h antes</b> en vuelos internacionales y <b>2 h antes</b> en nacionales. Verifique escalas, cambios de terminal y requisitos de tránsito.</div>
   </section>
 
@@ -407,6 +429,7 @@
     <h2>6 · Alojamiento
       <span class="tools no-print"><button onclick="addRow('tblHotel')">+ Hotel</button></span>
     </h2>
+    <div class="tblWrap">
     <table id="tblHotel">
       <thead>
         <tr>
@@ -437,6 +460,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </section>
 
   <!-- ---------- 7. TRASLADOS, TOURS Y OTROS SERVICIOS ---------- -->
@@ -444,6 +468,7 @@
     <h2>7 · Traslados, excursiones y otros servicios
       <span class="tools no-print"><button onclick="addRow('tblServ')">+ Servicio</button></span>
     </h2>
+    <div class="tblWrap">
     <table id="tblServ">
       <thead>
         <tr>
@@ -483,6 +508,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </section>
 
   <!-- ---------- 8. SEGURO ---------- -->
@@ -491,7 +517,7 @@
     <div class="grid g4">
       <div class="field"><span class="lbl">Compañía</span><span class="f" data-ph="Aseguradora" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Nº de póliza</span><span class="f" data-ph="—" contenteditable="true"></span></div>
-      <div class="field"><span class="lbl">Plan / cobertura</span><span class="f" data-ph="Médica USD 00.000" contenteditable="true"></span></div>
+      <div class="field"><span class="lbl">Plan / cobertura</span><span class="f" data-ph="Médica MXN 00,000" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Vigencia</span><span class="f" data-ph="dd/mm/aaaa – dd/mm/aaaa" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Asistencia 24/7</span><span class="f" data-ph="+00 000 000 000" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Email asistencia</span><span class="f" data-ph="asistencia@aseguradora.com" contenteditable="true"></span></div>
@@ -509,14 +535,15 @@
     </h2>
 
     <div class="grid g4" style="margin-bottom:6px">
-      <div class="field"><span class="lbl">Moneda</span><span class="f" id="moneda" data-ph="EUR" contenteditable="true">EUR</span></div>
+      <div class="field"><span class="lbl">Moneda</span><span class="f" id="moneda" data-ph="MXN" contenteditable="true">MXN</span></div>
       <div class="field"><span class="lbl">Forma de pago acordada</span><span class="f" data-ph="Transferencia / tarjeta / cuotas" contenteditable="true"></span></div>
-      <div class="field" style="grid-column:span 2"><span class="lbl">Datos bancarios para el pago</span><span class="f" data-ph="Banco · IBAN · Titular · Concepto: nº de reserva" contenteditable="true"></span></div>
+      <div class="field" style="grid-column:span 2"><span class="lbl">Datos bancarios para el pago</span><span class="f" data-ph="Banco · CLABE · Titular · Concepto: nº de reserva" contenteditable="true"></span></div>
     </div>
 
     <div class="fin">
       <div>
         <h3>Desglose de conceptos</h3>
+        <div class="tblWrap">
         <table id="tblConceptos">
           <thead>
             <tr>
@@ -533,61 +560,62 @@
               <td class="rownum">1</td>
               <td><span class="f" data-ph="Billetes de avión (ida y vuelta)" contenteditable="true"></span></td>
               <td><span class="f num" data-ph="2" contenteditable="true"></span></td>
-              <td><span class="f num" data-ph="0,00" contenteditable="true"></span></td>
-              <td><span class="f num imp" data-ph="0,00" contenteditable="true"></span></td>
+              <td><span class="f num" data-ph="0.00" contenteditable="true"></span></td>
+              <td><span class="f num imp" data-ph="0.00" contenteditable="true"></span></td>
               <td class="del no-print"><button onclick="delRow(this)">✕</button></td>
             </tr>
             <tr>
               <td class="rownum">2</td>
               <td><span class="f" data-ph="Alojamiento" contenteditable="true"></span></td>
               <td><span class="f num" data-ph="1" contenteditable="true"></span></td>
-              <td><span class="f num" data-ph="0,00" contenteditable="true"></span></td>
-              <td><span class="f num imp" data-ph="0,00" contenteditable="true"></span></td>
+              <td><span class="f num" data-ph="0.00" contenteditable="true"></span></td>
+              <td><span class="f num imp" data-ph="0.00" contenteditable="true"></span></td>
               <td class="del no-print"><button onclick="delRow(this)">✕</button></td>
             </tr>
             <tr>
               <td class="rownum">3</td>
               <td><span class="f" data-ph="Traslados y excursiones" contenteditable="true"></span></td>
               <td><span class="f num" data-ph="1" contenteditable="true"></span></td>
-              <td><span class="f num" data-ph="0,00" contenteditable="true"></span></td>
-              <td><span class="f num imp" data-ph="0,00" contenteditable="true"></span></td>
+              <td><span class="f num" data-ph="0.00" contenteditable="true"></span></td>
+              <td><span class="f num imp" data-ph="0.00" contenteditable="true"></span></td>
               <td class="del no-print"><button onclick="delRow(this)">✕</button></td>
             </tr>
             <tr>
               <td class="rownum">4</td>
               <td><span class="f" data-ph="Seguro de viaje" contenteditable="true"></span></td>
               <td><span class="f num" data-ph="2" contenteditable="true"></span></td>
-              <td><span class="f num" data-ph="0,00" contenteditable="true"></span></td>
-              <td><span class="f num imp" data-ph="0,00" contenteditable="true"></span></td>
+              <td><span class="f num" data-ph="0.00" contenteditable="true"></span></td>
+              <td><span class="f num imp" data-ph="0.00" contenteditable="true"></span></td>
               <td class="del no-print"><button onclick="delRow(this)">✕</button></td>
             </tr>
             <tr>
               <td class="rownum">5</td>
               <td><span class="f" data-ph="Tasas, cargos y gestión" contenteditable="true"></span></td>
               <td><span class="f num" data-ph="1" contenteditable="true"></span></td>
-              <td><span class="f num" data-ph="0,00" contenteditable="true"></span></td>
-              <td><span class="f num imp" data-ph="0,00" contenteditable="true"></span></td>
+              <td><span class="f num" data-ph="0.00" contenteditable="true"></span></td>
+              <td><span class="f num imp" data-ph="0.00" contenteditable="true"></span></td>
               <td class="del no-print"><button onclick="delRow(this)">✕</button></td>
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <div>
         <h3>Totales</h3>
         <div class="totals">
-          <div class="row"><span class="k">Subtotal servicios</span><span class="v" id="tSubtotal">EUR 0,00</span></div>
-          <div class="row"><span class="k">Impuestos / tasas adicionales</span><span class="v f num" id="tImpuestos" data-ph="0,00" contenteditable="true">0,00</span></div>
-          <div class="row"><span class="k">Descuento / promoción</span><span class="v f num" id="tDescuento" data-ph="0,00" contenteditable="true">0,00</span></div>
-          <div class="row grand"><span class="k">TOTAL DEL VIAJE</span><span class="v" id="tTotal">EUR 0,00</span></div>
-          <div class="row paid"><span class="k">Total abonado</span><span class="v" id="tAbonado">EUR 0,00</span></div>
-          <div class="row due"><span class="k">SALDO PENDIENTE</span><span class="v" id="tSaldo">EUR 0,00</span></div>
+          <div class="row"><span class="k">Subtotal servicios</span><span class="v" id="tSubtotal">$0.00 MXN</span></div>
+          <div class="row"><span class="k">Impuestos / tasas adicionales</span><span class="v f num" id="tImpuestos" data-ph="0.00" contenteditable="true">0.00</span></div>
+          <div class="row"><span class="k">Descuento / promoción</span><span class="v f num" id="tDescuento" data-ph="0.00" contenteditable="true">0.00</span></div>
+          <div class="row grand"><span class="k">TOTAL DEL VIAJE</span><span class="v" id="tTotal">$0.00 MXN</span></div>
+          <div class="row paid"><span class="k">Total abonado</span><span class="v" id="tAbonado">$0.00 MXN</span></div>
+          <div class="row due"><span class="k">SALDO PENDIENTE</span><span class="v" id="tSaldo">$0.00 MXN</span></div>
         </div>
 
         <div class="deadline">
           <div class="lbl">Fecha límite de pago del saldo</div>
           <div class="f big" data-ph="dd/mm/aaaa" style="color:var(--danger)" contenteditable="true"></div>
-          <div class="fine" style="margin-top:3px">El impago en la fecha indicada puede suponer la <b>cancelación automática</b> de la reserva y la pérdida de los importes abonados, según las condiciones del apartado 12.</div>
+          <div class="fine" style="margin-top:3px">El impago en la fecha indicada puede suponer la <b>cancelación automática</b> de la reserva y la pérdida de los importes abonados, según las condiciones del apartado 13.</div>
         </div>
       </div>
     </div>
@@ -598,6 +626,7 @@
     <h2>10 · Pagos realizados
       <span class="tools no-print"><button onclick="addRow('tblPagos')">+ Pago</button></span>
     </h2>
+    <div class="tblWrap">
     <table id="tblPagos">
       <thead>
         <tr>
@@ -617,7 +646,7 @@
           <td><span class="f" data-ph="Transferencia / Tarjeta / Efectivo" contenteditable="true"></span></td>
           <td><span class="f" data-ph="Nº de operación" contenteditable="true"></span></td>
           <td><span class="f" data-ph="Cobrado" contenteditable="true"></span></td>
-          <td><span class="f num pago" data-ph="0,00" contenteditable="true"></span></td>
+          <td><span class="f num pago" data-ph="0.00" contenteditable="true"></span></td>
           <td class="del no-print"><button onclick="delRow(this)">✕</button></td>
         </tr>
         <tr>
@@ -626,11 +655,12 @@
           <td><span class="f" data-ph="—" contenteditable="true"></span></td>
           <td><span class="f" data-ph="—" contenteditable="true"></span></td>
           <td><span class="f" data-ph="—" contenteditable="true"></span></td>
-          <td><span class="f num pago" data-ph="0,00" contenteditable="true"></span></td>
+          <td><span class="f num pago" data-ph="0.00" contenteditable="true"></span></td>
           <td class="del no-print"><button onclick="delRow(this)">✕</button></td>
         </tr>
       </tbody>
     </table>
+    </div>
   </section>
 
   <!-- ---------- 11. CALENDARIO DE PAGOS PENDIENTES ---------- -->
@@ -638,6 +668,7 @@
     <h2>11 · Calendario de pagos pendientes
       <span class="tools no-print"><button onclick="addRow('tblCuotas')">+ Cuota</button></span>
     </h2>
+    <div class="tblWrap">
     <table id="tblCuotas">
       <thead>
         <tr>
@@ -655,7 +686,7 @@
           <td><span class="f" data-ph="dd/mm/aaaa" contenteditable="true"></span></td>
           <td><span class="f" data-ph="Segundo pago" contenteditable="true"></span></td>
           <td><span class="f" data-ph="Transferencia" contenteditable="true"></span></td>
-          <td><span class="f num cuota" data-ph="0,00" contenteditable="true"></span></td>
+          <td><span class="f num cuota" data-ph="0.00" contenteditable="true"></span></td>
           <td class="del no-print"><button onclick="delRow(this)">✕</button></td>
         </tr>
         <tr>
@@ -663,18 +694,19 @@
           <td><span class="f" data-ph="dd/mm/aaaa" contenteditable="true"></span></td>
           <td><span class="f" data-ph="Pago final" contenteditable="true"></span></td>
           <td><span class="f" data-ph="Transferencia" contenteditable="true"></span></td>
-          <td><span class="f num cuota" data-ph="0,00" contenteditable="true"></span></td>
+          <td><span class="f num cuota" data-ph="0.00" contenteditable="true"></span></td>
           <td class="del no-print"><button onclick="delRow(this)">✕</button></td>
         </tr>
       </tbody>
       <tfoot>
         <tr>
           <td colspan="4" style="text-align:right;font-weight:700">Total programado</td>
-          <td class="num" style="font-weight:700" id="tCuotas">EUR 0,00</td>
+          <td class="num" style="font-weight:700" id="tCuotas">$0.00 MXN</td>
           <td class="del no-print"></td>
         </tr>
       </tfoot>
     </table>
+    </div>
     <div class="fine" id="avisoCuotas" style="margin-top: 4px; color: rgb(15, 123, 68);">✓ El calendario de pagos cubre exactamente el saldo pendiente.</div>
   </section>
 
@@ -685,7 +717,7 @@
       <div class="field"><span class="lbl">Pasaporte / documento</span><span class="f" data-ph="Vigencia mínima de 6 meses desde la fecha de regreso" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Visado</span><span class="f" data-ph="No requerido / requerido (tipo, plazo de tramitación)" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Vacunas y sanidad</span><span class="f" data-ph="Ninguna obligatoria / fiebre amarilla…" contenteditable="true"></span></div>
-      <div class="field"><span class="lbl">Autorización electrónica</span><span class="f" data-ph="ETIAS / ESTA / eTA — nº" contenteditable="true"></span></div>
+      <div class="field"><span class="lbl">Autorización electrónica</span><span class="f" data-ph="ESTA / eTA / ETA — nº" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Menores de edad</span><span class="f" data-ph="Permiso de salida notarial si aplica" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Otros requisitos</span><span class="f" data-ph="Billete de salida, fondos, seguro obligatorio…" contenteditable="true"></span></div>
     </div>
@@ -700,7 +732,7 @@
     <div class="grid g2">
       <div class="field"><span class="lbl">Política de cambios</span><span class="f" data-ph="Cambios sujetos a disponibilidad y diferencia tarifaria + gasto de gestión de …" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Política de cancelación</span><span class="f" data-ph="Más de 60 días: …% · 59–30 días: …% · 29–15 días: …% · Menos de 15 días: sin reembolso" contenteditable="true"></span></div>
-      <div class="field"><span class="lbl">Gastos de gestión de la agencia</span><span class="f" data-ph="0,00 por expediente" contenteditable="true"></span></div>
+      <div class="field"><span class="lbl">Gastos de gestión de la agencia</span><span class="f" data-ph="0.00 MXN por expediente" contenteditable="true"></span></div>
       <div class="field"><span class="lbl">Condiciones de la tarifa aérea</span><span class="f" data-ph="No reembolsable / no endosable / cambios con penalidad" contenteditable="true"></span></div>
       <div class="field" style="grid-column:span 2"><span class="lbl">Observaciones y acuerdos particulares</span><span class="f" data-ph="Anote aquí cualquier acuerdo especial con el cliente" contenteditable="true"></span></div>
     </div>
@@ -736,13 +768,13 @@
 
   <footer class="doc-foot">
     <div>Documento generado por <span class="f" data-ph="Nombre de la agencia" contenteditable="true">Itinera Travel Agency</span> · Reserva <span class="f" data-ph="AGV-2026-0001" contenteditable="true"></span></div>
-    <div>Este documento no sustituye a los billetes ni a los bonos de servicio · Página 1</div>
+    <div>Este documento no sustituye a los billetes ni a los bonos de servicio</div>
   </footer>
 </div>
 
 <script>
 /* ══════════════ Utilidades numéricas ══════════════ */
-// Acepta "1.234,56", "1,234.56", "1234.56", "€ 1.200" …
+// Acepta "1.234,56", "1,234.56", "1234.56", "$ 1,200" …
 function num(txt){
   if(!txt) return 0;
   let s = String(txt).replace(/[^\d.,-]/g,'').trim();
@@ -758,7 +790,7 @@ function num(txt){
   return isNaN(n) ? 0 : n;
 }
 function fmt(n){
-  return n.toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2});
+  return n.toLocaleString('es-MX',{minimumFractionDigits:2, maximumFractionDigits:2});
 }
 function txt(el){ return el ? el.textContent : ''; }
 
@@ -766,7 +798,7 @@ function txt(el){ return el ? el.textContent : ''; }
 function recalcular(){
   const doc = document.getElementById('doc');
   const mon = (txt(document.getElementById('moneda')) || '').trim();
-  const cur = v => (mon ? mon + ' ' : '') + fmt(v);
+  const cur = v => { const c = (mon || 'MXN').toUpperCase(); try { return new Intl.NumberFormat('es-MX',{style:'currency',currency:c,currencyDisplay:'narrowSymbol'}).format(v) + ' ' + c; } catch(e){ return c + ' ' + fmt(v); } };
 
   // Subtotal: usa el importe si está; si no, cantidad × precio unitario
   let subtotal = 0;
